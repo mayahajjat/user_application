@@ -10,7 +10,7 @@ app.get('/', function(req,res)
 
 app.get('/form', function(req,res)
 {
-    res.sendFile(__dirname+'/nodeform.html')
+    res.sendFile(__dirname+'/userform.html')
 })
 
 app.get('/listUsers', function(req,res)
@@ -40,17 +40,37 @@ app.get('/user/:id', function(req,res)
    
 })
 
-app.delete('/deleteUser', function(req,res)  ///postman
-{
-    res.send("userDeleted")
-})
 
-app.post('addUser', function(req,res) ///postman 
-{
-    res.send("userAdded")
-})
+const bodyParser = require('body-parser');
 
-var server= app.listen(9000, function()
+// Middleware for parsing url-encoded data
+const urlEncoded = bodyParser.urlencoded({ extended: false });
+
+// Delete User Endpoint
+app.delete('/deleteUser/:id', function(req, res) {
+    var data = fs.readFileSync(__dirname + '/user.json');
+    data = JSON.parse(data);
+    delete data['user' + req.params.id]
+    res.send(data);
+});
+
+// Add User Endpoint
+app.post('/addUser', urlEncoded, function(req, res) {
+    var newUser = {
+        name: req.body.name || '',
+        password: req.body.password || '',
+        profession: req.body.profession || ''
+    };
+    var data = fs.readFileSync(__dirname + '/user.json');
+    data = JSON.parse(data);
+    var userId = Object.keys(data).length + 1;
+    data['user' + userId] = newUser;
+    fs.writeFileSync(__dirname + '/user.json', JSON.stringify(data, null, 2));
+    res.send(data);
+});
+
+
+var server= app.listen(7000, function()
 {
     var host = server.address().address
     var port= server.address().port
